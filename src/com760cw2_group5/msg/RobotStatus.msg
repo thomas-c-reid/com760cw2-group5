@@ -1,0 +1,6 @@
+string current_state
+float32 distance_to_goal
+float32 x_position
+float32 y_position
+float32 yaw
+int32 wall_hits

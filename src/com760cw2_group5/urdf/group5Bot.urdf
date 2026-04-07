@@ -1,0 +1,237 @@
+<?xml version="1.0" ?>
+
+<robot name="group5Bot">
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- Gazebo material colours                                               -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <gazebo reference="base_link_chassis">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+  <gazebo reference="left_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+  </gazebo>
+
+  <gazebo reference="right_wheel">
+    <material>Gazebo/Blue</material>
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+  </gazebo>
+
+  <gazebo reference="caster_link">
+    <mu1>0.01</mu1>
+    <mu2>0.01</mu2>
+    <kp>1000000</kp>
+    <kd>100</kd>
+  </gazebo>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- Differential drive plugin                                             -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <gazebo>
+    <plugin filename="libgazebo_ros_diff_drive.so" name="differential_drive_controller">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>20</updateRate>
+      <leftJoint>left_wheel_hinge</leftJoint>
+      <rightJoint>right_wheel_hinge</rightJoint>
+      <wheelSeparation>0.3</wheelSeparation>
+      <wheelDiameter>0.2</wheelDiameter>
+      <torque>0.3</torque>
+      <wheelAcceleration>0.8</wheelAcceleration>
+      <commandTopic>group5Bot/cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <robotBaseFrame>base_link_chassis</robotBaseFrame>
+      <legacyMode>false</legacyMode>
+    </plugin>
+  </gazebo>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- Laser scanner plugin (Hokuyo-style)                                   -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <gazebo reference="laser_link">
+    <sensor type="ray" name="laser_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>3.5</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_laser" filename="libgazebo_ros_laser.so">
+        <topicName>group5Bot/laser/scan</topicName>
+        <frameName>laser_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- Links                                                                 -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- Base chassis -->
+  <link name="base_link_chassis">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.5 0.3 0.07"/>
+      </geometry>
+      <material name="orange">
+        <color rgba="1.0 0.5 0.0 1.0"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="5"/>
+      <origin rpy="0 0 0" xyz="0 0 0.1"/>
+      <inertia ixx="0.0395416666667" ixy="0" ixz="0" iyy="0.106208333333" iyz="0" izz="0.106208333333"/>
+    </inertial>
+    <collision>
+      <geometry>
+        <box size="0.5 0.3 0.07"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Caster wheel -->
+  <link name="caster_link">
+    <visual>
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link_chassis"/>
+    <child link="caster_link"/>
+    <origin xyz="0.2 0 -0.05"/>
+  </joint>
+
+  <!-- Right wheel -->
+  <link name="right_wheel">
+    <visual name="right_wheel_visual">
+      <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.04" radius="0.1"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.2 0.2 1.0 1.0"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="0.2"/>
+      <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
+      <inertia ixx="0.00052666666" ixy="0" ixz="0" iyy="0.00052666666" iyz="0" izz="0.001"/>
+    </inertial>
+    <collision name="right_wheel_collision">
+      <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.04" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_wheel_hinge" type="continuous">
+    <origin rpy="0 0 0" xyz="-0.05 0.15 0"/>
+    <child link="right_wheel"/>
+    <parent link="base_link_chassis"/>
+    <axis rpy="0 0 0" xyz="0 1 0"/>
+    <limit effort="10000" velocity="1000"/>
+    <joint_properties damping="1.0" friction="1.0"/>
+  </joint>
+
+  <!-- Left wheel -->
+  <link name="left_wheel">
+    <visual name="left_wheel_visual">
+      <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.04" radius="0.1"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0.2 0.2 1.0 1.0"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="0.2"/>
+      <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
+      <inertia ixx="0.00052666666" ixy="0" ixz="0" iyy="0.00052666666" iyz="0" izz="0.001"/>
+    </inertial>
+    <collision name="left_wheel_collision">
+      <origin rpy="0 1.5707 1.5707" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.04" radius="0.1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_wheel_hinge" type="continuous">
+    <origin rpy="0 0 0" xyz="-0.05 -0.15 0"/>
+    <child link="left_wheel"/>
+    <parent link="base_link_chassis"/>
+    <axis rpy="0 0 0" xyz="0 1 0"/>
+    <limit effort="10000" velocity="1000"/>
+    <joint_properties damping="1.0" friction="1.0"/>
+  </joint>
+
+  <!-- Laser scanner mount -->
+  <link name="laser_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder length="0.04" radius="0.03"/>
+      </geometry>
+      <material name="dark_grey">
+        <color rgba="0.3 0.3 0.3 1.0"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="0.1"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.000025" ixy="0" ixz="0" iyy="0.000025" iyz="0" izz="0.000045"/>
+    </inertial>
+    <collision>
+      <geometry>
+        <cylinder length="0.04" radius="0.03"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link_chassis"/>
+    <child link="laser_link"/>
+    <origin xyz="0.2 0 0.06" rpy="0 0 0"/>
+  </joint>
+
+</robot>

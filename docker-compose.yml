@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  ros-env:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: com760cw2
+    ports:
+      - "8080:8080"     # noVNC browser UI  → http://localhost:8080/vnc.html
+      - "5901:5901"     # VNC direct client  → localhost:5901
+      - "11311:11311"   # ROS master
+    volumes:
+      # Your ROS packages live in ./src on the host and /ros_ws/src in the container.
+      # Edit files on the host with your normal editor; they appear instantly inside.
+      - ./src:/ros_ws/src
+    environment:
+      - DISPLAY=:1
+      - ROS_MASTER_URI=http://localhost:11311
+      - TURTLEBOT3_MODEL=burger
+    shm_size: '512mb'    # Gazebo needs shared memory
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

@@ -1,0 +1,46 @@
+<launch>
+
+  <!-- ── Goal coordinates (adjust as needed) ─────────────────────────── -->
+  <arg name="goal_x" default="1.0"/>
+  <arg name="goal_y" default="2.0"/>
+
+  <!-- ── Spawn pose ──────────────────────────────────────────────────── -->
+  <arg name="spawn_x" default="-6.0"/>
+  <arg name="spawn_y" default="1.0"/>
+  <!-- Random yaw biased to face left of the goal direction (radians).
+       Range ~[1.8, 3.4] = facing roughly left / back-left, so the robot
+       must rotate before heading to goal. -->
+  <arg name="spawn_yaw" default="$(eval __import__('random').uniform(1.8, 3.4))"/>
+
+  <!-- ── Gazebo world ────────────────────────────────────────────────── -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find com760cw2_group5)/world/group5.world"/>
+    <arg name="paused" value="true"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+  </include>
+
+  <!-- ── Spawn robot ─────────────────────────────────────────────────── -->
+  <param name="robot_description" textfile="$(find com760cw2_group5)/urdf/group5Bot.urdf"/>
+
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+        args="-param robot_description -urdf -model group5Bot -x $(arg spawn_x) -y $(arg spawn_y) -z 0.1 -Y $(arg spawn_yaw)"
+        output="screen"/>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+    <param name="publish_frequency" value="50.0"/>
+  </node>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+
+  <!-- ── Navigation nodes ────────────────────────────────────────────── -->
+  <node name="go_to_point" pkg="com760cw2_group5" type="GoToPoint.py" output="screen"/>
+
+  <node name="follow_wall" pkg="com760cw2_group5" type="FollowWall.py" output="screen"/>
+
+  <node name="bug2" pkg="com760cw2_group5" type="bug2.py" output="screen">
+    <param name="goal_x" value="$(arg goal_x)"/>
+    <param name="goal_y" value="$(arg goal_y)"/>
+  </node>
+
+</launch>

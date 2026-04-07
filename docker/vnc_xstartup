@@ -1,0 +1,6 @@
+#!/bin/bash
+# VNC desktop startup — launches XFCE4
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+export DISPLAY=:1
+exec startxfce4
