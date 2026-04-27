@@ -1,16 +1,18 @@
 <launch>
 
   <!-- ── Goal coordinates (adjust as needed) ─────────────────────────── -->
-  <arg name="goal_x" default="1.0"/>
-  <arg name="goal_y" default="2.0"/>
+  <arg name="goal_x" default="5.0"/>
+  <arg name="goal_y" default="0.0"/>
 
   <!-- ── Spawn pose ──────────────────────────────────────────────────── -->
-  <arg name="spawn_x" default="-6.0"/>
-  <arg name="spawn_y" default="1.0"/>
-  <!-- Random yaw biased to face left of the goal direction (radians).
-       Range ~[1.8, 3.4] = facing roughly left / back-left, so the robot
-       must rotate before heading to goal. -->
-  <arg name="spawn_yaw" default="$(eval __import__('random').uniform(1.8, 3.4))"/>
+  <arg name="spawn_x" default="-5.0"/>
+  <arg name="spawn_y" default="0.0"/>
+  <!-- Spawn yaw (radians). Default ~2.5 = facing back-left so the robot
+       must rotate to head toward the goal. To randomize per launch, set
+       env var SPAWN_YAW first, e.g.:
+         SPAWN_YAW=$(python3 -c "import random; print(random.uniform(1.8,3.4))") \
+           roslaunch com760cw2_group5 bug2_navigation.launch -->
+  <arg name="spawn_yaw" default="$(optenv SPAWN_YAW 0.0)"/>
 
   <!-- ── Gazebo world ────────────────────────────────────────────────── -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">

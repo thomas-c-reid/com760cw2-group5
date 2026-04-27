@@ -64,9 +64,22 @@
     <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
     <atmosphere type='adiabatic'/>
     <physics name='default_physics' default='0' type='ode'>
-      <max_step_size>0.002</max_step_size>
+      <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>0</real_time_update_rate>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>100</iters>
+          <sor>1.0</sor>
+        </solver>
+        <constraints>
+          <cfm>0.0001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>10.0</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
     </physics>
     <scene>
       <ambient>0.4 0.4 0.4 1</ambient>
@@ -1508,7 +1521,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-0.44375 -4.81271 0 0 0 -1.5713</pose>
+      <pose frame=''>3 0 0 0 0 -1.5713</pose>
     </model>
     <model name='jersey_barrier_clone_clone_clone_clone_clone_0'>
       <static>1</static>
@@ -1651,7 +1664,7 @@
         <kinematic>0</kinematic>
         <gravity>1</gravity>
       </link>
-      <pose frame=''>-0.493024 -0.856819 0 0 0 -1.5713</pose>
+      <pose frame=''>0 0 0 0 0 -1.5713</pose>
     </model>
     <model name='jersey_barrier_clone_clone_clone_clone_clone_1'>
       <static>1</static>
@@ -2055,20 +2068,20 @@
         </link>
       </model>
       <model name='jersey_barrier_clone_clone_clone_clone_clone'>
-        <pose frame=''>-0.44375 -4.81271 0 0 0 -1.5713</pose>
+        <pose frame=''>3 0 0 0 0 -1.5713</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-0.44375 -4.81271 0 0 0 -1.5713</pose>
+          <pose frame=''>3 0 0 0 0 -1.5713</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='jersey_barrier_clone_clone_clone_clone_clone_0'>
-        <pose frame=''>-0.493024 -0.856819 0 0 0 -1.5713</pose>
+        <pose frame=''>0 0 0 0 0 -1.5713</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-0.493024 -0.856819 0 0 0 -1.5713</pose>
+          <pose frame=''>0 0 0 0 0 -1.5713</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -2156,7 +2169,7 @@
           <pose frame=''>0 0 0 0 -0 0</pose>
           <geometry>
             <mesh>
-              <uri>/home/oceaneagle/.gazebo/models/lamp_post/meshes/lamp_post.dae</uri>
+              <uri>model://lamp_post/meshes/lamp_post.dae</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -2213,7 +2226,7 @@
     </model>
     <model name='goal_marker'>
       <static>1</static>
-      <pose frame=''>1.0 2.0 0 0 0 0</pose>
+      <pose frame=''>5.0 0.0 0 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
           <geometry>

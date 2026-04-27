@@ -1,0 +1,7 @@
+bool flag
+float32 speed
+string direction
+string message
+---
+bool success
+string response

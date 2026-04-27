@@ -3,7 +3,7 @@
 import rospy
 import math
 from geometry_msgs.msg import Twist, Point
-from nav_msgs.msg import Odometry
+from gazebo_msgs.msg import ModelStates
 from tf import transformations
 from com760cw2_group5.srv import SwitchBehavior, SwitchBehaviorResponse
 
@@ -28,11 +28,15 @@ class GoToPoint:
         self.yaw_threshold = math.radians(5)
         self.dist_threshold = 0.3
 
+
         # Publishers
         self.pub_vel = rospy.Publisher('/group5Bot/cmd_vel', Twist, queue_size=1)
 
-        # Subscribers
-        self.sub_odom = rospy.Subscriber('/odom', Odometry, self.callback_odom)
+        # Robot model name in Gazebo
+        self.model_name = 'group5Bot'
+
+        # Subscribers — use Gazebo ground-truth pose instead of /odom
+        self.sub_model_states = rospy.Subscriber('/gazebo/model_states', ModelStates, self.callback_model_states)
 
         # Service to activate/deactivate this behavior
         self.srv = rospy.Service('go_to_point_switch', SwitchBehavior, self.callback_switch)
@@ -54,13 +58,17 @@ class GoToPoint:
 
             rate.sleep()
 
-    def callback_odom(self, msg):
-        self.position = msg.pose.pose.position
+    def callback_model_states(self, msg):
+        try:
+            idx = msg.name.index(self.model_name)
+        except ValueError:
+            return
+        self.position = msg.pose[idx].position
         quaternion = (
-            msg.pose.pose.orientation.x,
-            msg.pose.pose.orientation.y,
-            msg.pose.pose.orientation.z,
-            msg.pose.pose.orientation.w,
+            msg.pose[idx].orientation.x,
+            msg.pose[idx].orientation.y,
+            msg.pose[idx].orientation.z,
+            msg.pose[idx].orientation.w,
         )
         euler = transformations.euler_from_quaternion(quaternion)
         self.yaw = euler[2]
@@ -83,10 +91,14 @@ class GoToPoint:
         desired_yaw = math.atan2(des_pos.y - self.position.y, des_pos.x - self.position.x)
         err_yaw = self.normalize_angle(desired_yaw - self.yaw)
 
+        rospy.loginfo_throttle(1.0,
+            '[GoToPoint] FIX_HEADING pos=(%.2f,%.2f) yaw=%.2f des_yaw=%.2f err=%.2f',
+            self.position.x, self.position.y, self.yaw, desired_yaw, err_yaw)
+
         if abs(err_yaw) > self.yaw_threshold:
             vel = Twist()
-            # Proportional control — slow down as heading approaches target
-            vel.angular.z = max(-0.5, min(0.5, err_yaw * 1.0))
+            # Proportional control capped at 0.5 rad/s to avoid physical instability
+            vel.angular.z = max(-0.5, min(0.5, err_yaw * 0.5))
             self.pub_vel.publish(vel)
         else:
             self.state = 1
@@ -105,7 +117,7 @@ class GoToPoint:
             self.state = 0
         else:
             vel = Twist()
-            vel.linear.x = 0.3
+            vel.linear.x = rospy.get_param('/bug2/linear_speed', 0.3)
             # Gentle course correction while moving
             vel.angular.z = err_yaw * 0.5
             self.pub_vel.publish(vel)

@@ -4,3 +4,5 @@ float32 x_position
 float32 y_position
 float32 yaw
 int32 wall_hits
+string wall_follow_direction
+float32 linear_speed

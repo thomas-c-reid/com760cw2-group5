@@ -43,20 +43,14 @@ class FollowWall:
             rate.sleep()
 
     def callback_laser(self, msg):
-        # Split 360-degree scan into 5 regions of 72° each
-        # Scan runs from -π (index 0 = behind) to +π (index 359 = behind)
-        # Forward is at index 180. Regions:
-        #   right:       indices 0-72     (-180° to -108°)
-        #   front_right: indices 72-144   (-108° to -36°)
-        #   front:       indices 144-216  (-36° to +36°)
-        #   front_left:  indices 216-288  (+36° to +108°)
-        #   left:        indices 288-360  (+108° to +180°)
+        # 360 samples from -π to +π.  Index 0 = -180° (behind),
+        # 90 = -90° (right), 180 = 0° (front), 270 = +90° (left).
         self.regions = {
-            'right':       min(min(msg.ranges[0:72]), 3.5),
-            'front_right': min(min(msg.ranges[72:144]), 3.5),
-            'front':       min(min(msg.ranges[144:216]), 3.5),
-            'front_left':  min(min(msg.ranges[216:288]), 3.5),
-            'left':        min(min(msg.ranges[288:360]), 3.5),
+            'right':       min(min(msg.ranges[54:126]), 3.5),    # -126° to -54°  (right)
+            'front_right': min(min(msg.ranges[126:162]), 3.5),   # -54°  to -18°  (front-right)
+            'front':       min(min(msg.ranges[162:198]), 3.5),   # -18°  to +18°  (front)
+            'front_left':  min(min(msg.ranges[198:234]), 3.5),   # +18°  to +54°  (front-left)
+            'left':        min(min(msg.ranges[234:306]), 3.5),   # +54°  to +126° (left)
         }
 
     def callback_switch(self, req):
@@ -75,8 +69,8 @@ class FollowWall:
 
         # If too close to a wall in front, back up straight first
         if r['front'] < self.d_too_close:
-            msg.linear.x = -0.3
-            msg.angular.z = 0.0
+            msg.linear.x = -0.15
+            msg.angular.z = 0.3   # back up AND gently rotate to free the robot
             return msg
 
         front_clear = r['front'] > d
@@ -96,7 +90,7 @@ class FollowWall:
         elif front_clear and not front_right_clear and right_clear:
             # Case 3: Wall on front-right — drift left slightly
             msg.linear.x = 0.2
-            msg.angular.z = 0.1
+            msg.angular.z = 0.15
 
         elif front_clear and not front_right_clear and not right_clear:
             # Case 4: Wall on front-right and right — go straight
