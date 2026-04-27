@@ -16,8 +16,12 @@ class GoToPoint:
         # Robot state
         self.position = Point()
         self.yaw = 0
-        # State machine: 0 - fix heading, 1 - go straight, 2 - reached destination
+        # State machine: -1 - brake, 0 - fix heading, 1 - go straight, 2 - reached
         self.state = 0
+
+        # Braking counter — publish zero velocity for this many cycles before turning
+        self.brake_cycles = 0
+        self.BRAKE_DURATION = 10  # cycles at 20 Hz = 0.5 seconds
 
         # Destination — updated by bug2 via rosparam before activating
         self.desired_position = Point()
@@ -47,7 +51,9 @@ class GoToPoint:
                 rate.sleep()
                 continue
 
-            if self.state == 0:
+            if self.state == -1:
+                self.brake()
+            elif self.state == 0:
                 self.fix_heading(self.desired_position)
             elif self.state == 1:
                 self.go_straight(self.desired_position)
@@ -79,13 +85,24 @@ class GoToPoint:
             # Read the goal from rosparam (set by bug2 before calling this service)
             self.desired_position.x = rospy.get_param('/bug2/goal_x', 0.0)
             self.desired_position.y = rospy.get_param('/bug2/goal_y', 0.0)
-            self.state = 0  # reset to fix heading
-            rospy.loginfo('[GoToPoint] Activated — heading to (%.2f, %.2f)',
+            # Start with braking to kill momentum from wall-following
+            self.state = -1
+            self.brake_cycles = 0
+            rospy.loginfo('[GoToPoint] Activated — braking then heading to (%.2f, %.2f)',
                           self.desired_position.x, self.desired_position.y)
         else:
             vel = Twist()
             self.pub_vel.publish(vel)
         return SwitchBehaviorResponse(success=True)
+
+    def brake(self):
+        """Publish zero velocity to kill momentum before turning."""
+        vel = Twist()
+        self.pub_vel.publish(vel)
+        self.brake_cycles += 1
+        if self.brake_cycles >= self.BRAKE_DURATION:
+            rospy.loginfo('[GoToPoint] Brake done, fixing heading')
+            self.state = 0
 
     def fix_heading(self, des_pos):
         desired_yaw = math.atan2(des_pos.y - self.position.y, des_pos.x - self.position.x)
@@ -97,8 +114,8 @@ class GoToPoint:
 
         if abs(err_yaw) > self.yaw_threshold:
             vel = Twist()
-            # Proportional control capped at 0.5 rad/s to avoid physical instability
-            vel.angular.z = max(-0.5, min(0.5, err_yaw * 0.5))
+            vel.linear.x = 0.0
+            vel.angular.z = max(-0.6, min(0.6, err_yaw * 0.6))
             self.pub_vel.publish(vel)
         else:
             self.state = 1
@@ -117,9 +134,11 @@ class GoToPoint:
             self.state = 0
         else:
             vel = Twist()
-            vel.linear.x = rospy.get_param('/bug2/linear_speed', 0.3)
-            # Gentle course correction while moving
-            vel.angular.z = err_yaw * 0.5
+            base_speed = rospy.get_param('/bug2/linear_speed', 0.3)
+            # Decelerate as we approach the goal to prevent overshoot
+            vel.linear.x = min(base_speed, max(0.05, err_pos * 0.3))
+            # Course correction while moving
+            vel.angular.z = err_yaw * 0.6
             self.pub_vel.publish(vel)
 
     def done(self):
